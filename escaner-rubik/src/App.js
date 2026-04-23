@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useState, useCallback, useEffect } from 'react';
 import Webcam from "react-webcam";
 import { clasificarColor } from './colorUtils'; 
 import './App.css';
@@ -13,6 +13,7 @@ const ORDEN_CARAS = ['U', 'R', 'F', 'D', 'L', 'B'];
 
 function App() {
   const webcamRef = useRef(null);
+  const [cvReady, setCvReady] = useState(false);
   const [capturaProgresiva, setCapturaProgresiva] = useState({
     carasEscaneadas: 0,
     datos: { U: [], R: [], F: [], D: [], L: [], B: [] },
@@ -88,13 +89,29 @@ function App() {
     });
   };
 
+  useEffect(() => {
+    // Verificar si OpenCV ya se cargó antes de montar el componente
+    if (window.cvLoaded || (window.cv && window.cv.Mat)) {
+      setCvReady(true);
+    } else {
+      // Escuchar el evento si todavía no carga
+      const handleLoad = () => setCvReady(true);
+      document.addEventListener('cvLoaded', handleLoad);
+      return () => document.removeEventListener('cvLoaded', handleLoad);
+    }
+  }, []);
+
   const caraSiguiente = ORDEN_CARAS[capturaProgresiva.carasEscaneadas];
 
   return (
     <div className="App">
       <h1>Escaner del Robot de Rubik</h1>
       
-      {capturaProgresiva.carasEscaneadas < 6 ? (
+      {!cvReady ? (
+        <div style={{ padding: '20px', fontSize: '1.2rem' }}>
+          Cargando OpenCV...
+        </div>
+      ) : capturaProgresiva.carasEscaneadas < 6 ? (
         <>
           <h3>Paso {capturaProgresiva.carasEscaneadas + 1} de 6: Muestra la cara {caraSiguiente}</h3>
           <div className="camera-container">
