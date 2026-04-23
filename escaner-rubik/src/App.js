@@ -1,7 +1,13 @@
+ fix-opencv-loading-6424888942149941917
+import React, { useRef, useState, useCallback, useEffect } from 'react';
+import Webcam from "react-webcam";
+import { clasificarColor } from './colorUtils'; 
+
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Webcam from 'react-webcam';
 import { clasificarColorDesdeContexto, rgbToHsv } from './colorUtils';
 import { RubikOpenCvDetector, loadOpenCv } from './rubikVision';
+main
 import './App.css';
 
 const CAMERA_SIZE = 400;
@@ -108,6 +114,13 @@ function obtenerEtiquetaEstado(camaraLista, procesando, escaneoCompleto, opencvS
 
 function App() {
   const webcamRef = useRef(null);
+ fix-opencv-loading-6424888942149941917
+  const [cvReady, setCvReady] = useState(false);
+  const [capturaProgresiva, setCapturaProgresiva] = useState({
+    carasEscaneadas: 0,
+    datos: { U: [], R: [], F: [], D: [], L: [], B: [] },
+  });
+
   const canvasRef = useRef(null);
   const detectorRef = useRef(null);
   const procesandoRef = useRef(false);
@@ -190,6 +203,7 @@ function App() {
 
     return detectarColoresFallback(ctx);
   };
+main
 
   const capturarCaraActual = () => {
     if (procesandoRef.current) {
@@ -325,6 +339,18 @@ function App() {
     setMensajeEstado('Escaneo reiniciado. Vuelve a alinear la primera cara.');
   };
 
+  useEffect(() => {
+    // Verificar si OpenCV ya se cargó antes de montar el componente
+    if (window.cvLoaded || (window.cv && window.cv.Mat)) {
+      setCvReady(true);
+    } else {
+      // Escuchar el evento si todavía no carga
+      const handleLoad = () => setCvReady(true);
+      document.addEventListener('cvLoaded', handleLoad);
+      return () => document.removeEventListener('cvLoaded', handleLoad);
+    }
+  }, []);
+
   const caraSiguiente = ORDEN_CARAS[capturaProgresiva.carasEscaneadas];
   const escaneoCompleto = capturaProgresiva.carasEscaneadas === ORDEN_CARAS.length;
   const botonDeshabilitado = !camaraLista || procesandoRef.current;
@@ -334,6 +360,34 @@ function App() {
   const totalCalibrados = useMemo(() => Object.keys(calibracionColores).length, [calibracionColores]);
 
   return (
+ fix-opencv-loading-6424888942149941917
+    <div className="App">
+      <h1>Escaner del Robot de Rubik</h1>
+      
+      {!cvReady ? (
+        <div style={{ padding: '20px', fontSize: '1.2rem' }}>
+          Cargando OpenCV...
+        </div>
+      ) : capturaProgresiva.carasEscaneadas < 6 ? (
+        <>
+          <h3>Paso {capturaProgresiva.carasEscaneadas + 1} de 6: Muestra la cara {caraSiguiente}</h3>
+          <div className="camera-container">
+            <Webcam
+              audio={false}
+              ref={webcamRef}
+              screenshotFormat="image/jpeg"
+              videoConstraints={videoConstraints}
+              onUserMediaError={() => alert("¡Error de cámara! Asegúrate de que ninguna otra app la esté usando.")}
+              className="webcam-feed"
+            />
+            
+            <div className="grid-overlay">
+              {[...Array(9)].map((_, i) => (
+                <div key={i} className="grid-cell">
+                   <div className="center-dot"></div>
+                </div>
+              ))}
+
     <div className="app-shell">
       <div className="background-orb background-orb-left" />
       <div className="background-orb background-orb-right" />
@@ -360,6 +414,7 @@ function App() {
             <div className="metric-card">
               <span className="metric-label">Restantes</span>
               <strong>{pasosRestantes}</strong>
+ main
             </div>
           </div>
         </section>
