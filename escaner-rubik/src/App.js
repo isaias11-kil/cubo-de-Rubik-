@@ -8,6 +8,14 @@ const CAMERA_SIZE = 400;
 const DETECTION_SIZE = 240;
 const GRID_SIZE = 3;
 const ORDEN_CARAS = ['U', 'R', 'F', 'D', 'L', 'B'];
+const LEYENDA_CARAS = [
+  { letra: 'U', descripcion: 'Up (Arriba - Blanca)' },
+  { letra: 'R', descripcion: 'Right (Derecha - Roja)' },
+  { letra: 'F', descripcion: 'Front (Frente - Verde)' },
+  { letra: 'D', descripcion: 'Down (Abajo - Amarilla)' },
+  { letra: 'L', descripcion: 'Left (Izquierda - Naranja)' },
+  { letra: 'B', descripcion: 'Back (Atrás - Azul)' },
+];
 const GRID_CELLS = Array.from({ length: GRID_SIZE * GRID_SIZE }, (_, index) => index);
 const CALIBRATION_COLORS = ['W', 'R', 'O', 'Y', 'G', 'B'];
 const CALIBRATION_STORAGE_KEY = 'rubik_color_calibration_v1';
@@ -502,6 +510,13 @@ function App() {
                     </span>
                   );
                 })}
+              </div>
+              <div className="face-legend">
+                {LEYENDA_CARAS.map((item) => (
+                  <div key={item.letra} className="legend-item">
+                    <strong>{item.letra}:</strong> {item.descripcion}
+                  </div>
+                ))}
               </div>
             </div>
 
