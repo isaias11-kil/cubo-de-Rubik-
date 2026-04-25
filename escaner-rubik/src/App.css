@@ -426,6 +426,27 @@ body {
   border-color: rgba(29, 155, 95, 0.22);
 }
 
+.face-legend {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+}
+
+.legend-item {
+  font-size: 0.85rem;
+  color: var(--text-soft);
+  line-height: 1.4;
+}
+
+.legend-item strong {
+  color: var(--text);
+}
+
 .resultados {
   margin-top: 24px;
   padding: 22px;
