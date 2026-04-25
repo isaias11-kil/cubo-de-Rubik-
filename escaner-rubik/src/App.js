@@ -23,7 +23,7 @@ const CALIBRATION_STORAGE_KEY = 'rubik_color_calibration_v1';
 const videoConstraints = {
   width: CAMERA_SIZE,
   height: CAMERA_SIZE,
-  facingMode: 'user',
+  facingMode: 'environment',
 };
 
 function crearEstadoInicial() {
