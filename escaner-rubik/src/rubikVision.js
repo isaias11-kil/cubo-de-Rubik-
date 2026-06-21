@@ -136,36 +136,52 @@ export function loadOpenCv() {
 
   openCvReadyPromise = new Promise((resolve, reject) => {
     const existingScript = document.getElementById(OPENCV_SCRIPT_ID);
-    const handleReady = () => {
+    let checkInterval = null;
+
+    const checkAndResolve = () => {
       if (isOpenCvReady(window.cv)) {
+        if (checkInterval) {
+          clearInterval(checkInterval);
+          checkInterval = null;
+        }
         resolve(window.cv);
-      } else {
-        reject(new Error('OpenCV se cargo, pero no inicializo correctamente.'));
+        return true;
       }
+      return false;
     };
 
-    const bindRuntimeInit = () => {
-      if (!window.cv) {
-        reject(new Error('OpenCV no esta en window despues de cargar script.'));
-        return;
+    // Prepare OpenCV initialization hook before loading the script
+    window.cv = window.cv || {};
+    const previousInit = window.cv.onRuntimeInitialized;
+    window.cv.onRuntimeInitialized = () => {
+      if (typeof previousInit === 'function') {
+        previousInit();
       }
+      checkAndResolve();
+    };
 
-      if (isOpenCvReady(window.cv)) {
-        resolve(window.cv);
-        return;
-      }
+    const handleOnLoad = () => {
+      if (checkAndResolve()) return;
 
-      const previousInit = window.cv.onRuntimeInitialized;
-      window.cv.onRuntimeInitialized = () => {
-        if (typeof previousInit === 'function') {
-          previousInit();
+      // Fallback polling in case onRuntimeInitialized was missed
+      checkInterval = setInterval(() => {
+        checkAndResolve();
+      }, 100);
+
+      // Stop polling after 15 seconds to avoid memory leaks
+      setTimeout(() => {
+        if (checkInterval) {
+          clearInterval(checkInterval);
+          checkInterval = null;
         }
-        handleReady();
-      };
+        if (!isOpenCvReady(window.cv)) {
+          reject(new Error('Timeout: OpenCV no inicializo despues de cargar.'));
+        }
+      }, 15000);
     };
 
     if (existingScript) {
-      bindRuntimeInit();
+      handleOnLoad();
       return;
     }
 
@@ -173,8 +189,11 @@ export function loadOpenCv() {
     script.id = OPENCV_SCRIPT_ID;
     script.async = true;
     script.src = OPENCV_SCRIPT_URL;
-    script.onerror = () => reject(new Error('No se pudo cargar opencv.js'));
-    script.onload = () => bindRuntimeInit();
+    script.onerror = () => {
+      if (checkInterval) clearInterval(checkInterval);
+      reject(new Error('No se pudo cargar opencv.js'));
+    };
+    script.onload = () => handleOnLoad();
 
     document.head.appendChild(script);
   });
